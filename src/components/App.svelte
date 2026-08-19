@@ -108,6 +108,7 @@
     settingsRemoveTab,
   } from "../settings.svelte";
   import { getMyFunctionsNote } from "../system-notes";
+  import { isServerStorage } from "../server-storage";
   import {
     addNoteToBrowserHistory,
     formatDateYYYYMMDDDay,
@@ -984,6 +985,13 @@
   const kCmdTestErrorTracking = nmid();
 
   function buildStorageMenu(): Command[] {
+    if (isServerStorage()) {
+      return [
+        ["Current store: server", kMenuIdJustText],
+        ["Export all notes to .zip file", kCmdExportNotes],
+        ["Help: storage", kCmdShowStorageHelp],
+      ];
+    }
     let dh = getStorageFS();
     let currStorage = "Current store: browser (local storage)";
     if (dh) {

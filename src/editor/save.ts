@@ -4,9 +4,13 @@ import { SET_CONTENT, transactionsHasAnnotation } from "./annotation";
 import type { MultiBlockEditor } from "./editor";
 
 export const autoSaveContent = (editor: MultiBlockEditor, interval: number) => {
-  const debouncedSave = debounce(() => {
-    editor.save();
-    editor.setIsDirtyCallback(false);
+  const debouncedSave = debounce(async () => {
+    try {
+      await editor.save();
+      if (editor.getContent() === editor.diskContent) editor.setIsDirtyCallback(false);
+    } catch (error) {
+      console.error("auto-save failed", error);
+    }
   }, interval);
 
   return ViewPlugin.fromClass(

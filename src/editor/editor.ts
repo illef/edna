@@ -191,8 +191,8 @@ export class MultiBlockEditor {
     if (content === this.diskContent) {
       return;
     }
-    this.diskContent = content;
     await this.saveCallback(content);
+    this.diskContent = content;
   }
 
   getContent() {

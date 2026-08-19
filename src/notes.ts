@@ -43,6 +43,7 @@ import {
 } from "./metadata";
 import { getSettings } from "./settings.svelte";
 import { getStats, incNoteCreateCount, incNoteDeleteCount, incNoteSaveCount } from "./state";
+import { isServerStorage, serverDeleteNote, serverLoadNote, serverLoadNoteNames, serverSaveNote } from "./server-storage";
 import {
   getBuiltInFunctionsNote,
   getHelp,
@@ -407,7 +408,9 @@ export async function loadNoteNames(): Promise<string[]> {
   console.log("loadNoteNames");
   let dh = getStorageFS();
   let res: string[][] = [];
-  if (!dh) {
+  if (isServerStorage()) {
+    res = [await serverLoadNoteNames(), []];
+  } else if (!dh) {
     res = loadNoteNamesLS();
   } else {
     res = await loadNoteNamesFS(dh);
@@ -496,7 +499,9 @@ export async function saveNote(name: string, content: string) {
   }
 
   let dh = getStorageFS();
-  if (!dh) {
+  if (isServerStorage()) {
+    await serverSaveNote(name, content);
+  } else if (!dh) {
     let path = notePathFromNameLS(name);
     localStorage.setItem(path, content);
   } else {
@@ -509,7 +514,12 @@ export async function saveNote(name: string, content: string) {
 export async function createNoteWithName(name: string, content: string | null = null) {
   let dh = getStorageFS();
   content = fixUpNoteContent(content);
-  if (!dh) {
+  if (isServerStorage()) {
+    await serverSaveNote(name, content);
+    incNoteCreateCount();
+    await loadNoteNames();
+    return;
+  } else if (!dh) {
     const path = notePathFromName(name);
     // TODO: should it happen that note already exists?
     if (localStorage.getItem(path) == null) {
@@ -533,7 +543,12 @@ export async function appendToNote(name: string, content: string) {
   throwIf(!startsWithBlockHeader(content), "content must start with block header ~~~");
 
   let dh = getStorageFS();
-  if (!dh) {
+  if (isServerStorage()) {
+    let oldContent = noteExists(name) ? await loadNote(name) : undefined;
+    await serverSaveNote(name, (oldContent || "") + content);
+    oldContent ? incNoteSaveCount() : incNoteCreateCount();
+    return;
+  } else if (!dh) {
     let path = notePathFromName(name);
     let v = localStorage.getItem(path);
     if (v === null) {
@@ -604,7 +619,9 @@ export async function loadNote(name: string): Promise<string | undefined> {
       res = await fsFileHandleReadTextFile(openedNote.handle);
     } else {
       let dh = getStorageFS();
-      if (!dh) {
+      if (isServerStorage()) {
+        res = await serverLoadNote(name);
+      } else if (!dh) {
         res = loadNoteLS(name);
       } else {
         res = await readMaybeEncryptedNoteFS(dh, name);
@@ -734,7 +751,9 @@ async function loadNoteNamesMoreRobust() {
 
 export async function deleteNote(name: string) {
   let dh = getStorageFS();
-  if (!dh) {
+  if (isServerStorage()) {
+    await serverDeleteNote(name);
+  } else if (!dh) {
     let key = notePathFromName(name);
     localStorage.removeItem(key);
   } else {

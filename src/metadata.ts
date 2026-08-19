@@ -2,6 +2,7 @@ import { tick } from "svelte";
 import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
 import { updateAfterNoteStateChange } from "./globals";
 import { getStorageFS } from "./notes";
+import { isServerStorage, serverLoadMetadata, serverSaveMetadata } from "./server-storage";
 
 export const kMetadataName = "__metadata.edna.json";
 
@@ -45,7 +46,9 @@ export async function loadNotesMetadata(): Promise<Metadata> {
   console.log("loadNotesMetadata: started");
   let dh = getStorageFS();
   let s;
-  if (!dh) {
+  if (isServerStorage()) {
+    s = await serverLoadMetadata();
+  } else if (!dh) {
     s = localStorage.getItem(kMetadataName);
   } else {
     try {
@@ -65,7 +68,9 @@ export async function loadNotesMetadata(): Promise<Metadata> {
 export async function saveNotesMetadata(m: Metadata = metadata!) {
   let s = JSON.stringify(m, null, 2);
   let dh = getStorageFS();
-  if (dh) {
+  if (isServerStorage()) {
+    await serverSaveMetadata(s);
+  } else if (dh) {
     try {
       await fsWriteTextFile(dh, kMetadataName, s);
     } catch (e) {

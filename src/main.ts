@@ -18,6 +18,7 @@ import {
   setStorageFS,
 } from "./notes";
 import { getSettings, settingsAddTab } from "./settings.svelte";
+import { initServerStorage } from "./server-storage";
 import { isDev } from "./util";
 
 // window.onunhandledrejection = console.warn;
@@ -29,7 +30,9 @@ export async function boot() {
 
   getSettings();
 
-  let dh = await dbGetDirHandle();
+  const usingServer = await initServerStorage();
+  let dh = usingServer ? undefined : await dbGetDirHandle();
+  if (usingServer) console.log("storing notes on the server");
   if (dh) {
     console.log("storing data in the file system");
     let ok = await hasHandlePermission(dh, true);
@@ -41,7 +44,7 @@ export async function boot() {
       appSvelte = mount(AskFSPermissions, { target });
       return;
     }
-  } else {
+  } else if (!usingServer) {
     console.log("storing data in localStorage");
   }
 

@@ -136,6 +136,12 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 		case "/api/currency_rates.json":
 			serverApiCurrencyRates(w, r)
 			return
+		case "/api/notes":
+			handleNotes(w, r)
+			return
+		case "/api/notes/metadata":
+			handleNotesMetadata(w, r)
+			return
 		case "/.well-known/appspecific/com.chrome.devtools.json":
 			serveChromeDevToolsJSON(w, r)
 			return
