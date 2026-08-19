@@ -188,11 +188,45 @@ class NoteBlockStart extends WidgetType {
     return false;
   }
 }
+
+class AddBlockButton extends WidgetType {
+  constructor(readonly blockFrom: number) {
+    super();
+  }
+  eq(other: AddBlockButton) {
+    return this.blockFrom === other.blockFrom;
+  }
+  toDOM(view: EditorView) {
+    const wrap = document.createElement("div");
+    wrap.className = "heynote-add-block";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "+";
+    button.title = button.ariaLabel = "Add block";
+    button.onclick = () => {
+      const block = view.state.field(blockState).find((block) => block.from === this.blockFrom);
+      if (!block || view.state.readOnly) return;
+      const delimiter = "\n∞∞∞text-a\n";
+      view.dispatch({
+        changes: { from: block.to, insert: delimiter },
+        selection: EditorSelection.cursor(block.to + delimiter.length),
+        scrollIntoView: true,
+        userEvent: "input",
+      });
+      view.focus();
+    };
+    wrap.appendChild(button);
+    return wrap;
+  }
+}
+
 const noteBlockWidget = () => {
   const decorate = (state: EditorState) => {
     const widgets: Range<Decoration>[] = [];
+    const blocks = state.field(blockState);
+    const lastBlock = blocks.at(-1);
 
-    state.field(blockState).forEach((block: Block) => {
+    blocks.forEach((block: Block) => {
       let deco = Decoration.replace({
         widget: new NoteBlockStart(block.from === 0 ? true : false),
         inclusive: true,
@@ -201,9 +235,14 @@ const noteBlockWidget = () => {
       });
       //console.log("deco range:", block.from === 0 ? block.from : block.from+1,block.contentFrom-1)
       widgets.push(deco.range(block.from === 0 ? block.from : block.from + 1, block.contentFrom - 1));
+      if (block === lastBlock && !state.readOnly) {
+        widgets.push(
+          Decoration.widget({ widget: new AddBlockButton(block.from), block: true, side: 1 }).range(block.to),
+        );
+      }
     });
 
-    return widgets.length > 0 ? RangeSet.of(widgets) : Decoration.none;
+    return widgets.length > 0 ? RangeSet.of(widgets, true) : Decoration.none;
   };
 
   const noteBlockStartField = StateField.define({

@@ -111,6 +111,19 @@ describe("Block creation (browser tests)", () => {
     await runTest("Mod+Shift+Enter", ["A", "B", "C", "D"]);
   });
 
+  it("adds a block after the last block", async () => {
+    const { editor, container } = te;
+    editor.setContent(`${threeBlockContent}\n∞∞∞markdown\n`);
+
+    const button = container.querySelector<HTMLButtonElement>(".heynote-add-block button");
+    expect(button).not.toBeNull();
+    button!.click();
+
+    expect(editor.getBlocks()).toHaveLength(5);
+    expect(editor.getBlocks()[3].language).toBe("markdown");
+    expect(editor.getBlocks()[4].language).toBe("text");
+  });
+
   it("create block before Markdown block", async () => {
     const { editor } = te;
     // Reset with markdown content

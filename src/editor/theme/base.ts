@@ -96,6 +96,25 @@ export const heynoteBase = EditorView.theme({
   ".heynote-block-start.first": {
     height: "0px",
   },
+  ".heynote-add-block": {
+    display: "flex",
+    justifyContent: "center",
+    padding: "4px 0",
+  },
+  ".heynote-add-block button": {
+    width: "44px",
+    height: "44px",
+    border: "0",
+    borderRadius: "50%",
+    background: "transparent",
+    color: "inherit",
+    cursor: "pointer",
+    fontSize: "24px",
+  },
+  ".heynote-add-block button:hover, .heynote-add-block button:focus-visible": {
+    background: "rgba(128, 128, 128, 0.15)",
+    outline: "none",
+  },
   ".heynote-math-result": {
     paddingLeft: "12px",
     position: "relative",
