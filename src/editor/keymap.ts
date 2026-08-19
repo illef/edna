@@ -24,7 +24,7 @@ import {
   selectPreviousParagraph,
 } from "./block/commands";
 import { isMac, isWindows } from "./cmutils";
-import { copyCommand, cutCommand, pasteCommand } from "./copy-paste";
+import { copyCommand, cutCommand } from "./copy-paste";
 import { insertDateAndTime } from "./date-time";
 import type { MultiBlockEditor } from "./editor";
 import { foldBlock, toggleBlockFold, unfoldBlock } from "./fold-gutter";
@@ -53,7 +53,6 @@ export function keymapFromSpec(specs: any[]) {
 export function ednaKeymap(editor: MultiBlockEditor) {
   let spec = [
     ["Mod-c", copyCommand(editor)],
-    ["Mod-v", pasteCommand],
     ["Mod-x", cutCommand(editor)],
     ["Tab", indentMore],
     ["Shift-Tab", indentLess],
