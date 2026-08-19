@@ -1,0 +1,25 @@
+version: "3"
+
+tasks:
+  build:
+    desc: Build the frontend and server
+    cmds:
+      - bun install --frozen-lockfile
+      - bun run build
+      - go build -o edna .
+
+  test:
+    desc: Run server tests and build the frontend
+    cmds:
+      - go test ./...
+      - bun run build
+
+  docker:build:
+    desc: Build the production Docker image
+    cmds:
+      - docker build -t edna .
+
+  fly:deploy:
+    desc: Deploy to Fly.io (create the edna_data volume once before the first deploy)
+    cmds:
+      - fly deploy
